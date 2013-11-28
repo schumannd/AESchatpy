@@ -23,25 +23,25 @@ def main():
 		davidsSocket.send(cipher)
 	davidsSocket.close
 
-def recievePublicKeys():
-	publicKeys = ""
-	incomingMessage = "start"
-	print "receiving public keys"
-	while incomingMessage != "done":
-		incomingMessage = davidsSocket.recv(BUFFERSIZE)
-		publicKeys += incomingMessage
-	print "...done"
-	return publicKeys[:-5].split("\n")
-
 def exchangeSecret():
 	publicKeys = recievePublicKeys()
 	encryptedSharedSecret = encryptSharedSecretWithElGamal(int(publicKeys[0]),
 		int(publicKeys[1]), int(publicKeys[2]))
-	print "sending shared secret..."
+	print "# sending shared secret..."
 	davidsSocket.send(str(encryptedSharedSecret[0]))
 	davidsSocket.send(str(encryptedSharedSecret[1]))
-	print "...done"
+	print "# ...done"
 	return
+
+def recievePublicKeys():
+	publicKeys = ""
+	incomingMessage = "start"
+	print "# receiving public keys"
+	while incomingMessage != "done":
+		incomingMessage = davidsSocket.recv(BUFFERSIZE)
+		publicKeys += incomingMessage
+	print "# ...done"
+	return publicKeys[:-5].split("\n")
 
 def encryptSharedSecretWithElGamal(p, g, b):
 	y = random.randrange(1, p-1)
