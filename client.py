@@ -3,12 +3,18 @@ import sys
 import random
 from socket import socket
 import thread
+from aes import *
+
 
 davidsSocket = socket()
 host = '127.0.0.1'
-port = 1234
+# host = 'polaris.clarkson.edu'
+port = 1233
 BUFFERSIZE = 1024
-sharedSecret = random.getrandbits(256)
+moo = AESModeOfOperation()
+# create key and turn it into byte array
+sharedSecretAsInteger = random.getrandbits(256)
+sharedSecret = [int(sharedSecretAsInteger & (0xff << pos*8)) >> pos*8 for pos in range(32)]
 
 def main():
 	davidsSocket.connect((host,port))
@@ -20,7 +26,7 @@ def main():
 		message = raw_input()
 		if not message: break
 		cipher = encrypt(message)
-		davidsSocket.send(cipher)
+		davidsSocket.send(''.join([chr(x) for x in cipher]))
 	davidsSocket.close
 
 def exchangeSecret():
@@ -47,19 +53,22 @@ def encryptSharedSecretWithElGamal(p, g, b):
 	y = random.randrange(1, p-1)
 	c1 = pow(g, y, p)
 	s = pow(b, y, p)
-	c2 = (sharedSecret*s)%p
+	c2 = (sharedSecretAsInteger*s)%p
 	return [c1, c2]
 
-def encrypt(message):
-	return message
+def encrypt(cleartext):
+	mode, orig_len, ciph = moo.encrypt(cleartext, moo.modeOfOperation["CFB"],
+			sharedSecret, moo.aes.keySize["SIZE_256"], sharedSecret[:16])
+	return ciph
 
-def decrypt(message):
-	return message
+def decrypt(cipher):
+	return moo.decrypt(cipher, None, moo.modeOfOperation["CFB"], sharedSecret,
+			moo.aes.keySize["SIZE_256"], sharedSecret[:16])
 
 def recieve(connection):
 	while True:
 		cipher = connection.recv(BUFFERSIZE)
-		message = decrypt(cipher)
+		message = decrypt([ord(x) for x in list(cipher)])
 		print message
 
 if __name__ == "__main__":

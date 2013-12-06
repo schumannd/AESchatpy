@@ -14,3 +14,7 @@ b		public key = g^a mod p
 
 private key file:
 a		private random exponent
+
+Th AES implementation (aes.py) has been taken from:
+http://anh.cs.luc.edu/331/code/aes.py
+
